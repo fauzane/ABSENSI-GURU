@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Guru atau Admin di sekolah",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "NIP atau ID Unik" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["guru", "admin"] },
+        "password": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "role", "password"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Catatan absensi harian guru",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Format: NIP_YYYY-MM-DD" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "date": { "type": "string", "description": "Format: YYYY-MM-DD" },
+        "clockIn": { "type": "string", "format": "date-time" },
+        "clockOut": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Hadir", "Sakit", "Izin", "Dinas Luar"] },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "date", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Koleksi pengguna (Guru & Admin)"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "Koleksi data absensi harian"
+    }
+  }
+}

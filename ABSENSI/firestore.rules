@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.id is string && data.id.size() <= 20 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.role in ['guru', 'admin'];
+    }
+
+    function isValidAttendance(data) {
+      return data.userId is string && data.userId.size() <= 20 &&
+             data.date is string && data.date.size() == 10 &&
+             data.status in ['Hadir', 'Sakit', 'Izin', 'Dinas Luar'];
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Admin can manage all, user can read their own
+      allow read: if isSignedIn() && (isAdmin() || isOwner(userId));
+      allow create: if isAdmin() && isValidUser(request.resource.data);
+      allow update: if (isAdmin() || (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['password']))) 
+                    && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Attendance collection
+    match /attendance/{attendanceId} {
+      // Admin can read all, Guru can read their own
+      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      
+      // Guru can create their own daily record
+      allow create: if isSignedIn() && 
+                    request.resource.data.userId == request.auth.uid &&
+                    isValidAttendance(request.resource.data);
+      
+      // Guru can update their own daily record (e.g., clock out)
+      // Admin can correct anything
+      allow update: if (isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid)) &&
+                    isValidAttendance(request.resource.data);
+    }
+  }
+}
