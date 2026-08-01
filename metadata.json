@@ -1,0 +1,6 @@
+{
+  "name": "Absensi Guru SDM 23 Semanggi",
+  "description": "Sistem informasi absensi guru untuk SD Muhammadiyah 23 Semanggi berbasis digital.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
